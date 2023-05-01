@@ -1,0 +1,72 @@
+*
+{
+    box-sizing: border-box;
+}
+
+#window
+{
+    position: relative;
+    display: inline-block;
+    justify-content: center;
+    height: 100vh;
+}
+
+#gameBars
+{
+    padding-top: 5px;
+    padding-left: 100px;
+    padding-right: 100px;
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+#leftHealth
+{
+    background-color: yellow;
+    height: 30px;
+    width: 100%;
+}
+
+#timer
+{
+    border: 2px solid white;
+    height: 50px;
+    width: 100px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+#rightBars
+{
+    position: relative;
+    height: 30px;
+    width: 100%;
+}
+
+#rightHealth
+{
+    /* background-color: yellow; */
+    border: 2px solid white;
+    border-left:none; 
+
+    height: 30px;
+
+}
+
+#rightHealthDecrease
+{
+    position: absolute;
+    /* border: 1px solid white;
+    border-right:none; */
+    background: blue;
+    top: 2px;
+    bottom: 2px;
+    right:2px;
+    left: 0px;
+}
