@@ -5,13 +5,14 @@
 
 #window
 {
-    position: relative;
     display: inline-block;
     align-items: center;
     justify-content: center;
     height: 100vh;
-
-
+    position: absolute;
+    top: 65%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 #gameBars
@@ -29,18 +30,15 @@
 #leftBars
 {
     position: relative;
-    height: 30px;
+    border: 3.5px solid black;
+    border-right: none;
     width: 100%;
-    display: flex;
-    justify-content: flex-end;
 }
 
 #leftHealth
 {
-    border: 2px solid black;
-    border-right:none; 
     height: 30px;
-    width:110%;
+    width:100%;
     z-index: 1;
 }
 
@@ -48,15 +46,15 @@
 {
     position: absolute;
     background: rgb(40, 129, 40);
-    top: 1px;
-    bottom: 1px;
+    top: 0px;
+    bottom: 0px;
     right:0px;
     width:100%;
 }
 
 #timer
 {
-    border: 2px solid black;
+    border: 3px solid black;
     padding-bottom:15px;
     height: 60px;
     width: 100px;
@@ -71,14 +69,14 @@
 #rightBars
 {
     position: relative;
-    height: 30px;
     width: 100%;
+    border: 3.5px solid black;
+    border-left:none; 
+
 }
 
 #rightHealth
 {
-    border: 2px solid black;
-    border-left:none; 
     height: 30px;
     z-index: 1;
 }
@@ -86,12 +84,13 @@
 #rightHealthDecrease
 {
     position: absolute;
-    background: rgb(40, 129, 40);;
-    top: 1.5px;
-    bottom: 1.5px;
-    right:1.5px;
+    background: green;
+    top: 0px;
+    bottom: 0px;
+    right:0px;
     left: 0px;
 }
+
 
 #gameEnd
 {
@@ -106,3 +105,9 @@
     color:white;
     font-size: 90px;
 }
+
+/* #mainCanvas
+{
+    display: flex;
+    padding-left:50px;
+} */

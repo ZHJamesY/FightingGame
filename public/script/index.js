@@ -51,7 +51,7 @@ const player1 = new Sprite({
     framesTotal: 8,
     scale:3.0,
     offset: {
-        x:350,
+        x:335,
         y:365
     },
     sprites: {
@@ -80,14 +80,22 @@ const player1 = new Sprite({
             imageSrc: './image/EVil Wizard 2/Sprites/Attack2.png',
             framesTotal: 8,
             hitFrame: 6 - 1
+        },
+        takeHit: {
+            imageSrc: './image/EVil Wizard 2/Sprites/Take hit.png',
+            framesTotal: 3
+        },
+        death: {
+            imageSrc: './image/EVil Wizard 2/Sprites/Death.png',
+            framesTotal: 7
         }
     },
     attackBox: {
         offset: {
-            x:0,
+            x:0 - 3,
             y:0
         },
-        width:330,
+        width:340,
         height: 50
     }
 });
@@ -97,7 +105,7 @@ const player2 = new Sprite({
     position:
     {
         x:canvas.width - 200 - CHAR_WIDTH,
-        y:0 + 100
+        y:0 + 200
     },
     velocity:
     {
@@ -109,40 +117,48 @@ const player2 = new Sprite({
     framesTotal: 8,
     scale:4.0,
     offset: {
-        x:350,
+        x:295,
         y:270
     },
     sprites: {
         idle: {
-            imageSrc: './image/Fantasy Warrior/Sprites/Idle.png',
+            imageSrc: './image/Fantasy Warrior/left/Idle.png',
             framesTotal: 10,
         },
         run: {
-            imageSrc: './image/Fantasy Warrior/Sprites/Run.png',
+            imageSrc: './image/Fantasy Warrior/left/Run.png',
             framesTotal: 8
         },
         jump: {
-            imageSrc: './image/Fantasy Warrior/Sprites/Jump.png',
+            imageSrc: './image/Fantasy Warrior/left/Jump.png',
             framesTotal: 3
         },
         fall: {
-            imageSrc: './image/Fantasy Warrior/Sprites/Fall.png',
+            imageSrc: './image/Fantasy Warrior/left/Fall.png',
             framesTotal: 3
         },
         attack1: {
-            imageSrc: './image/Fantasy Warrior/Sprites/Attack1.png',
+            imageSrc: './image/Fantasy Warrior/left/Attack1.png',
             framesTotal: 7,
             hitFrame: 5 - 1
         },
         attack2: {
-            imageSrc: './image/Fantasy Warrior/Sprites/Attack3.png',
+            imageSrc: './image/Fantasy Warrior/left/Attack3.png',
             framesTotal: 8,
             hitFrame: 6 - 1
+        },
+        takeHit: {
+            imageSrc: './image/Fantasy Warrior/left/Take hit.png',
+            framesTotal: 3
+        },
+        death: {
+            imageSrc: './image/Fantasy Warrior/left/Death.png',
+            framesTotal: 7
         }
     },
     attackBox: {
         offset: {
-            x:-50,
+            x:-165,
             y:0
         },
         width:220,
@@ -150,7 +166,96 @@ const player2 = new Sprite({
     }
 });
 
-// detect rectangle collision
+// call animation loop
+animation();
+
+// key down event
+$(document).keydown(function(event){
+    // if player 1 death = false, perform moves
+    if(!player1.death)
+    {
+        switch(event.key)
+        {
+            // player1 cases
+            case 'w':
+                PLAYER1_KEYS.w.pressed = true;
+                break;
+            case 'a':
+                PLAYER1_KEYS.a.pressed = true;
+                player1.lastKey = 'a';
+                break
+            case 'd':
+                PLAYER1_KEYS.d.pressed = true;
+                player1.lastKey = 'd';
+                break
+            case 'j':
+                player1.attack('attack1');
+                break
+            case 'k':
+                player1.attack('attack2');
+                break
+        }
+    }
+
+    // if player 2 death = false, perform moves
+    if(!player2.death)
+    {
+        switch(event.key)
+        {
+            // player2 cases
+            case 'ArrowUp':
+                PLAYER2_KEYS.w.pressed = true;
+                break;
+            case 'ArrowLeft':
+                PLAYER2_KEYS.a.pressed = true;
+                player2.lastKey = 'a';
+                break
+            case 'ArrowRight':
+                PLAYER2_KEYS.d.pressed = true;
+                player2.lastKey = 'd';
+                break
+            case '1':
+                player2.attack('attack1');
+                break
+            case '2':
+                player2.attack('attack2');
+                break
+        }
+    }
+    
+    console.log(event.key, 'down');
+});
+
+// key up event
+$(document).keyup(function(event){
+    // player1 cases
+    switch(event.key)
+    {
+        case 'w':
+            PLAYER1_KEYS.w.pressed = false;
+            break;
+        case 'a':
+            PLAYER1_KEYS.a.pressed = false;
+            break
+        case 'd':
+            PLAYER1_KEYS.d.pressed = false;
+            break   
+
+        // player2 cases
+        case 'ArrowUp':
+            PLAYER2_KEYS.w.pressed = false;
+            break;
+        case 'ArrowLeft':
+            PLAYER2_KEYS.a.pressed = false;
+            break
+        case 'ArrowRight':
+            PLAYER2_KEYS.d.pressed = false;
+            break
+    }
+    console.log(event.key, 'up');
+});
+
+// detect rectangle(attack box) collision
 function rectangleCollision({rectangle1,rectangle2})
 {
     return (
@@ -186,9 +291,16 @@ function animation()
 
     // loop over animation function 
     window.requestAnimationFrame(animation);
+
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    
     background.draw();
+
+    // fading background, makes characters more visible
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
     player1.update('player1');
     player2.update('player2');
 
@@ -298,8 +410,14 @@ function animation()
         player1.isAttacking = false;
         player1.attackMoves = 'none';
 
-        player2.health -= 10;
-        document.getElementById('rightHealthDecrease').style.width = player2.health + '%';
+        // display take hit animation
+        player2.takeHit(10);
+
+        // update health bar color
+        healthBarColor('rightHealthDecrease');
+
+        // smooth heal decrease
+        gsap.to('#rightHealthDecrease', {width: player2.health + '%'});
 
         console.log("player1 attacking")
     }
@@ -321,8 +439,14 @@ function animation()
         player2.isAttacking = false;
         player2.attackMoves = 'none';
 
-        player1.health -= 10;
-        document.getElementById('leftHealthDecrease').style.width = player1.health + '%';
+        // display take hit animation
+        player1.takeHit(10);
+
+        // update health bar color
+        healthBarColor('leftHealthDecrease');
+
+        // smooth heal decrease
+        gsap.to('#leftHealthDecrease', {width: player1.health + '%'});
 
         console.log("player2 attacking")
     }
@@ -337,87 +461,21 @@ function animation()
 
 }
 
-animation();
+// update health bar color
+function healthBarColor(id)
+{
+    let HealthBar = document.getElementById(id);
+    let totalWidth = HealthBar.offsetParent.offsetWidth;
 
-// key down event
-$(document).keydown(function(event){
-    switch(event.key)
+    if((HealthBar.offsetWidth/totalWidth) * 100 <= 80)
     {
-        // player1 cases
-        case 'w':
-            PLAYER1_KEYS.w.pressed = true;
-            break;
-        case 'a':
-            PLAYER1_KEYS.a.pressed = true;
-            player1.lastKey = 'a';
-            break
-        case 'd':
-            PLAYER1_KEYS.d.pressed = true;
-            player1.lastKey = 'd';
-            break
-        case 'j':
-            player1.attack('attack1');
-            break
-        case 'k':
-            player1.attack('attack2');
-            break
-
-
-        // player2 cases
-        case 'ArrowUp':
-            PLAYER2_KEYS.w.pressed = true;
-            break;
-        case 'ArrowLeft':
-            PLAYER2_KEYS.a.pressed = true;
-            player2.lastKey = 'a';
-            break
-        case 'ArrowRight':
-            PLAYER2_KEYS.d.pressed = true;
-            player2.lastKey = 'd';
-            break
-        case '1':
-            player2.attack('attack1');
-            break
-        case '2':
-            player2.attack('attack2');
-            break
-
-
+        HealthBar.style.background = "linear-gradient(to right, rgb(255, 165, 0) 100%, rgb(255, 0, 0) 50%)";
     }
-    console.log(event.key, 'down');
-});
-
-// key up event
-$(document).keyup(function(event){
-    // player1 cases
-    switch(event.key)
+    if((HealthBar.offsetWidth/totalWidth) * 100 <= 40)
     {
-        case 'w':
-            PLAYER1_KEYS.w.pressed = false;
-            break;
-        case 'a':
-            PLAYER1_KEYS.a.pressed = false;
-            break
-        case 'd':
-            PLAYER1_KEYS.d.pressed = false;
-            break   
-
-        // player2 cases
-        case 'ArrowUp':
-            PLAYER2_KEYS.w.pressed = false;
-            break;
-        case 'ArrowLeft':
-            PLAYER2_KEYS.a.pressed = false;
-            break
-        case 'ArrowRight':
-            PLAYER2_KEYS.d.pressed = false;
-            break
-
-            
+        HealthBar.style.background = "red";
     }
-    console.log(event.key, 'up');
-});
-
+}
 
 
 

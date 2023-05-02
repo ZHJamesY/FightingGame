@@ -101,11 +101,13 @@ class Sprite extends Assets
             height: attackBox.height
         };
         this.color = color;
+
         // check if player currently attacking
         this.isAttacking = false;
         this.attackMoves = 'none';
 
         this.health = 100;
+        this.death = false;
 
         this.sprites = sprites;
 
@@ -121,13 +123,24 @@ class Sprite extends Assets
     {
         this.draw();
 
-        this.animateFrames();
+        // continue animateFrames if player death = false
+        if(!this.death)
+        {
+            this.animateFrames();
+        }
 
         // adjust attackBox facing
         this.attackBox.position.x = this.position.x + this.attackBox.offset.x;
         this.attackBox.position.y = this.position.y + this.attackBox.offset.y;
 
-        ctx.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+        //display attack box **************************
+        // ctx.fillStyle = 'black';
+        // ctx.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+
+        //display character box **************************
+        // ctx.fillStyle = 'blue';
+        // ctx.fillRect(this.position.x, this.position.y,CHAR_WIDTH, CHAR_HEIGHT);
+
 
         // position + velocity.y every update
         this.position.y += this.velocity.y;
@@ -161,8 +174,6 @@ class Sprite extends Assets
                 PLAYER2_KEYS.w.occurred = 1;
             }
         }
-
-
     }
 
     // assign true to isAttacking
@@ -172,15 +183,42 @@ class Sprite extends Assets
         this.switchSprites(moves);
         this.isAttacking = true;
         this.attackMoves = moves;
+    }
 
+    takeHit(dmg)
+    {
+        this.health -= dmg;
+
+        // display take hit or death animation
+        if(this.health <= 0)
+        {
+            this.switchSprites('death');
+        }
+        else
+        {
+            this.switchSprites('takeHit');
+        }
     }
 
     // correspond image for different sprite cases
     switchSprites(sprite)
     {
+        // return if death animation
+        if(this.image == this.sprites.death.image)
+        {
+            if(this.framesCurrent == this.sprites.death.framesTotal - 1)
+            {
+                this.death = true;
+            }
+            return
+        }
+
+        // return if attack animation
         if(this.image == this.sprites.attack1.image && this.framesCurrent < this.sprites.attack1.framesTotal - 1) return
         if(this.image == this.sprites.attack2.image && this.framesCurrent < this.sprites.attack2.framesTotal - 1) return
 
+        // return if take hit animation
+        if(this.image == this.sprites.takeHit.image && this.framesCurrent < this.sprites.takeHit.framesTotal - 1) return
 
         switch (sprite)
         {
@@ -192,7 +230,6 @@ class Sprite extends Assets
 
                     // set frame start back to 0 when change sprite
                     this.framesCurrent = 0;
-
                 }
                 break 
             case 'run':
@@ -238,6 +275,22 @@ class Sprite extends Assets
                     this.framesTotal = this.sprites.attack2.framesTotal;
                     this.framesCurrent = 0;
 
+                }
+                return
+            case 'takeHit':
+                if(this.image != this.sprites.takeHit.image)
+                {
+                    this.image = this.sprites.takeHit.image;
+                    this.framesTotal = this.sprites.takeHit.framesTotal;
+                    this.framesCurrent = 0;
+                }
+                break
+            case 'death':
+                if(this.image != this.sprites.death.image)
+                {
+                    this.image = this.sprites.death.image;
+                    this.framesTotal = this.sprites.death.framesTotal;
+                    this.framesCurrent = 0;
                 }
                 break
         }
