@@ -16,336 +16,410 @@ const PLAYER2_KEYS = {
     d:{pressed: false}, 
     w:{pressed: false, occurred: 0}
 };
-$(document).ready(function() {
-    // character sprite class
-    class Sprite
-    {
-        // constructor define position x,y, and velocity
-        constructor({position, velocity, color, offset})
-        {
-            // character position
-            this.position = position;
-            // moving speed
-            this.velocity = velocity;
-            // keep track of last key pressed
-            this.lastKey;
-            // attack box
-            this.attackBox = {
-                position: {
-                    x: this.position.x,
-                    y: this.position.y
-                },
-                // attack box initial position
-                offset,
-                width: 100,
-                height: 50
-            };
-            this.color = color;
-            // check if player currently attacking
-            this.isAttacking = false;
-            // attack animation on/off
-            this.attackAnimation = false
-            this.health = 100;
-        }
 
-        // draw object
-        draw()
-        {
-        
-            ctx.fillStyle = this.color;
-            // character rect
-            ctx.fillRect(this.position.x, this.position.y, CHAR_WIDTH, CHAR_HEIGHT);
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
 
-            if(this.attackAnimation == true)
-            {
-                ctx.fillStyle = 'white';
-                // attackBox rect
-                ctx.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height)
-            }
-        }
+canvas.width = WIDTH;
+canvas.height = HEIGHT;
 
-        // updates new position
-        update(player)
-        {
-            this.draw();
+ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-            // adjust attackBox facing
-            this.attackBox.position.x = this.position.x + this.attackBox.offset.x;
-            this.attackBox.position.y = this.position.y;
-
-            // position + velocity.y every update
-            this.position.y += this.velocity.y;
-
-            // position + velocity.x every update
-            this.position.x += this.velocity.x;
-
-            // stops when reach bottom of canvas, else increase speed
-            if(this.position.y + CHAR_HEIGHT + this.velocity.y >= HEIGHT)
-            {
-                this.velocity.y = 0;
-                if(player == 'player1')
-                {
-                    PLAYER1_KEYS.w.occurred = 0;
-                }
-                else if(player == 'player2')
-                {
-                    PLAYER2_KEYS.w.occurred = 0;
-                }
-            }
-            else
-            {
-                this.velocity.y += GRAVITY;
-                if(player == 'player1')
-                {
-                    PLAYER1_KEYS.w.occurred = 1;
-                }
-                else if(player == 'player2')
-                {
-                    PLAYER2_KEYS.w.occurred = 1;
-                }
-            }
-        }
-
-        // assign true to isAttacking
-        attack()
-        {
-            this.isAttacking = true;
-            this.attackAnimation = true;
-
-            // attack false after 100 milliseconds
-            setTimeout(function(){
-                this.isAttacking = false;
-                this.attackAnimation = false;
-            }.bind(this), 100)
-        }
-    }
-
-    const canvas = document.getElementById('mainCanvas');
-    const ctx = canvas.getContext('2d');
-
-    canvas.width = WIDTH;
-    canvas.height = HEIGHT;
-
-    ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-    // player1 instance
-    const player1 = new Sprite({
-        position:{
-            x:0 + 200,
-            y:0 + 100
-        },
-        velocity:{
-            // 2-dimensional velocity moving left-right, up-down
-            // 0: not moving by default
-            x:0,
-            y:0
-        },
-        color: 'red',
-        offset:{
-            x:0,
-            y:0
-        }
-    });
-
-    // player2 instance
-    const player2 = new Sprite({
-        position:
-        {
-            x:canvas.width - 200 - CHAR_WIDTH,
-            y:0 + 100
-        },
-        velocity:
-        {
-            x:0,
-            y:0
-        },
-        color: 'blue',
-        offset:{
-            x:-CHAR_WIDTH,
-            y:0
-        }
-    });
-
-    // detect rectangle collision
-    function rectangleCollision({rectangle1,rectangle2})
-    {
-        return (
-            rectangle1.attackBox.position.x + rectangle1.attackBox.width >= rectangle2.position.x 
-            && rectangle1.attackBox.position.x <= rectangle2.position.x + CHAR_WIDTH
-            && rectangle1.attackBox.position.y + rectangle1.attackBox.height >= rectangle2.position.y
-            && rectangle1.attackBox.position.y <= rectangle2.position.y + CHAR_HEIGHT
-        )
-    }
-
-    // animation infinite loop
-    function animation()
-    {
-        // loop over animation function 
-        window.requestAnimationFrame(animation);
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, WIDTH, HEIGHT);
-        player1.update('player1');
-        player2.update('player2');
-
-        // initial x velocity is 0
-        player1.velocity.x = 0;
-        player2.velocity.x = 0;
-
-        // player1 movements w: jump
-        if(PLAYER1_KEYS.w.pressed)
-        {
-            if(PLAYER1_KEYS.w.occurred == 0)
-            {
-                player1.velocity.y = -10;
-            }
-        }
-
-        // player2 movements w: jump
-        if(PLAYER2_KEYS.w.pressed)
-        {
-            if(PLAYER2_KEYS.w.occurred == 0)
-            {
-                player2.velocity.y = -10;
-            }
-        }
-
-        // player1 movements a: left, d: right 
-        if(PLAYER1_KEYS.a.pressed && player1.lastKey == 'a')
-        {
-            player1.velocity.x = -2.5;
-        }
-        else if(PLAYER1_KEYS.d.pressed && player1.lastKey == 'd')
-        {
-            player1.velocity.x = 2.5;
-        }
-        else if(PLAYER1_KEYS.a.pressed)
-        {
-            player1.velocity.x = -2.5;
-        }
-        else if(PLAYER1_KEYS.d.pressed)
-        {
-            player1.velocity.x = 2.5;
-        }   
-        
-        // player2 movements a: left, d: right 
-        if(PLAYER2_KEYS.a.pressed && player2.lastKey == 'a')
-        {
-            player2.velocity.x = -2.5;
-        }
-        else if(PLAYER2_KEYS.d.pressed && player2.lastKey == 'd')
-        {
-            player2.velocity.x = 2.5;
-        }
-        else if(PLAYER2_KEYS.a.pressed)
-        {
-            player2.velocity.x = -2.5;
-        }
-        else if(PLAYER2_KEYS.d.pressed)
-        {
-            player2.velocity.x = 2.5;
-        } 
-
-        // detect for attack collision for player1
-        if(rectangleCollision({rectangle1: player1, rectangle2: player2}) && player1.isAttacking)
-        {
-            player1.isAttacking = false;
-
-            player2.health -= 10;
-            document.getElementById('rightHealthDecrease').style.width = player2.health + '%';
-
-            console.log("player1 attacking")
-        }
-
-        // detect for attack collision for player2
-        if(rectangleCollision({rectangle1: player2, rectangle2: player1}) && player2.isAttacking)
-        {
-            player2.isAttacking = false;
-
-            player1.health -= 10;
-            document.getElementById('leftHealth').style.width = player1.health + '%';
-
-            console.log("player2 attacking")
-        }
-
-    }
-
-    animation();
-
-    // key down event
-    $(document).keydown(function(event){
-        switch(event.key)
-        {
-            // player1 cases
-            case 'w':
-                PLAYER1_KEYS.w.pressed = true;
-                break;
-            case 'a':
-                PLAYER1_KEYS.a.pressed = true;
-                player1.lastKey = 'a';
-                break
-            case 'd':
-                PLAYER1_KEYS.d.pressed = true;
-                player1.lastKey = 'd';
-                break
-            case 'j':
-                player1.attack();
-                break
-
-
-            // player2 cases
-            case 'ArrowUp':
-                PLAYER2_KEYS.w.pressed = true;
-                break;
-            case 'ArrowLeft':
-                PLAYER2_KEYS.a.pressed = true;
-                player2.lastKey = 'a';
-                break
-            case 'ArrowRight':
-                PLAYER2_KEYS.d.pressed = true;
-                player2.lastKey = 'd';
-                break
-            case '1':
-                player2.attack();
-                break
-
-
-        }
-        console.log(event.key, 'down');
-    });
-
-    // key up event
-    $(document).keyup(function(event){
-        // player1 cases
-        switch(event.key)
-        {
-            case 'w':
-                PLAYER1_KEYS.w.pressed = false;
-                break;
-            case 'a':
-                PLAYER1_KEYS.a.pressed = false;
-                break
-            case 'd':
-                PLAYER1_KEYS.d.pressed = false;
-                break   
-
-            // player2 cases
-            case 'ArrowUp':
-                PLAYER2_KEYS.w.pressed = false;
-                break;
-            case 'ArrowLeft':
-                PLAYER2_KEYS.a.pressed = false;
-                break
-            case 'ArrowRight':
-                PLAYER2_KEYS.d.pressed = false;
-                break
-   
-              
-        }
-        console.log(event.key, 'up');
-    });
-
-
-
+const background = new Assets({
+    position:{
+        x:0,
+        y:-220
+    },
+    imageSrc: './image/Free Pixel Art Hill/Background-ByEdermuniz.png'
+    
 });
+
+// player1 instance
+const player1 = new Sprite({
+    position:{
+        x:0 + 200,
+        y:0 + 200
+    },
+    velocity:{
+        // 2-dimensional velocity moving left-right, up-down
+        // 0: not moving by default
+        x:0,
+        y:0
+    },
+    color: 'red',
+    imageSrc: './image/EVil Wizard 2/Sprites/Idle.png',
+    framesTotal: 8,
+    scale:3.0,
+    offset: {
+        x:350,
+        y:365
+    },
+    sprites: {
+        idle: {
+            imageSrc: './image/EVil Wizard 2/Sprites/Idle.png',
+            framesTotal: 8
+        },
+        run: {
+            imageSrc: './image/EVil Wizard 2/Sprites/Run.png',
+            framesTotal: 8
+        },
+        jump: {
+            imageSrc: './image/EVil Wizard 2/Sprites/Jump.png',
+            framesTotal: 2
+        },
+        fall: {
+            imageSrc: './image/EVil Wizard 2/Sprites/Fall.png',
+            framesTotal: 2
+        },
+        attack1: {
+            imageSrc: './image/EVil Wizard 2/Sprites/Attack1.png',
+            framesTotal: 8,
+            hitFrame: 5 - 1
+        },
+        attack2: {
+            imageSrc: './image/EVil Wizard 2/Sprites/Attack2.png',
+            framesTotal: 8,
+            hitFrame: 6 - 1
+        }
+    },
+    attackBox: {
+        offset: {
+            x:0,
+            y:0
+        },
+        width:330,
+        height: 50
+    }
+});
+
+// player2 instance
+const player2 = new Sprite({
+    position:
+    {
+        x:canvas.width - 200 - CHAR_WIDTH,
+        y:0 + 100
+    },
+    velocity:
+    {
+        x:0,
+        y:0
+    },
+    color: 'blue',
+    imageSrc: './image/Fantasy Warrior/Sprites/Idle.png',
+    framesTotal: 8,
+    scale:4.0,
+    offset: {
+        x:350,
+        y:270
+    },
+    sprites: {
+        idle: {
+            imageSrc: './image/Fantasy Warrior/Sprites/Idle.png',
+            framesTotal: 10,
+        },
+        run: {
+            imageSrc: './image/Fantasy Warrior/Sprites/Run.png',
+            framesTotal: 8
+        },
+        jump: {
+            imageSrc: './image/Fantasy Warrior/Sprites/Jump.png',
+            framesTotal: 3
+        },
+        fall: {
+            imageSrc: './image/Fantasy Warrior/Sprites/Fall.png',
+            framesTotal: 3
+        },
+        attack1: {
+            imageSrc: './image/Fantasy Warrior/Sprites/Attack1.png',
+            framesTotal: 7,
+            hitFrame: 5 - 1
+        },
+        attack2: {
+            imageSrc: './image/Fantasy Warrior/Sprites/Attack3.png',
+            framesTotal: 8,
+            hitFrame: 6 - 1
+        }
+    },
+    attackBox: {
+        offset: {
+            x:-50,
+            y:0
+        },
+        width:220,
+        height: 50
+    }
+});
+
+// detect rectangle collision
+function rectangleCollision({rectangle1,rectangle2})
+{
+    return (
+        rectangle1.attackBox.position.x + rectangle1.attackBox.width >= rectangle2.position.x 
+        && rectangle1.attackBox.position.x <= rectangle2.position.x + CHAR_WIDTH
+        && rectangle1.attackBox.position.y + rectangle1.attackBox.height >= rectangle2.position.y
+        && rectangle1.attackBox.position.y <= rectangle2.position.y + CHAR_HEIGHT
+    )
+}
+
+// player win scenario message
+function gameEnd()
+{
+    let gameEndMsg = document.getElementById('gameEnd');
+
+    if(player1.health <= 0)
+    {
+        gameEndMsg.innerHTML = 'Player2 Wins!';
+        gameEndMsg.style.display = 'flex';
+    }
+    else if(player2.health <= 0)
+    {
+        gameEndMsg.innerHTML = 'Player1 Wins!';
+        gameEndMsg.style.display = 'flex';
+    }
+}
+
+// animation infinite loop
+function animation()
+{
+    // game end message
+    gameEnd();
+
+    // loop over animation function 
+    window.requestAnimationFrame(animation);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, WIDTH, HEIGHT);
+    background.draw();
+    player1.update('player1');
+    player2.update('player2');
+
+    // initial x velocity is 0
+    player1.velocity.x = 0;
+    player2.velocity.x = 0;
+
+    // player1 movements a: left, d: right 
+    if(PLAYER1_KEYS.a.pressed && player1.lastKey == 'a')
+    {
+        player1.velocity.x = -2.5;
+        player1.switchSprites('run');
+    }
+    else if(PLAYER1_KEYS.d.pressed && player1.lastKey == 'd')
+    {
+        player1.velocity.x = 2.5;
+        player1.switchSprites('run');
+    }
+    else if(PLAYER1_KEYS.a.pressed)
+    {
+        player1.velocity.x = -2.5;
+        player1.switchSprites('run');
+    }
+    else if(PLAYER1_KEYS.d.pressed)
+    {
+        player1.velocity.x = 2.5;
+        player1.switchSprites('run');
+    }   
+    else
+    {
+        // idle state if 'a' and 'd' not pressed
+        player1.switchSprites('idle')
+    }
+
+    // player1 movements w: jump
+    if(PLAYER1_KEYS.w.pressed)
+    {
+        if(PLAYER1_KEYS.w.occurred == 0)
+        {
+            player1.velocity.y = -11;
+        }
+    }
+    if(player1.velocity.y < 0)
+    {
+        player1.switchSprites('jump');
+    }
+    else if(player1.velocity.y > 0)
+    {
+        player1.switchSprites('fall');
+
+    }
+    
+    // player2 movements a: left, d: right 
+    if(PLAYER2_KEYS.a.pressed && player2.lastKey == 'a')
+    {
+        player2.velocity.x = -2.5;
+        player2.switchSprites('run');
+    }
+    else if(PLAYER2_KEYS.d.pressed && player2.lastKey == 'd')
+    {
+        player2.velocity.x = 2.5;
+        player2.switchSprites('run');
+
+    }
+    else if(PLAYER2_KEYS.a.pressed)
+    {
+        player2.velocity.x = -2.5;
+        player2.switchSprites('run');
+
+    }
+    else if(PLAYER2_KEYS.d.pressed)
+    {
+        player2.velocity.x = 2.5;
+        player2.switchSprites('run');
+
+    } 
+    else
+    {
+        // idle state if 'a' and 'd' not pressed
+        player2.switchSprites('idle')
+    }
+
+    // player2 movements w: jump
+    if(PLAYER2_KEYS.w.pressed)
+    {
+        if(PLAYER2_KEYS.w.occurred == 0)
+        {
+            player2.velocity.y = -11;
+        }
+    }
+    if(player2.velocity.y < 0)
+    {
+        player2.switchSprites('jump');
+    }
+    else if(player2.velocity.y > 0)
+    {
+        player2.switchSprites('fall');
+
+    }
+
+    // detect for attack collision for player1
+    if(rectangleCollision({rectangle1: player1, rectangle2: player2}) 
+        && player1.isAttacking
+        && player1.attackMoves != 'none'
+        && player1.framesCurrent == player1.sprites[player1.attackMoves].hitFrame)
+    {
+        player1.isAttacking = false;
+        player1.attackMoves = 'none';
+
+        player2.health -= 10;
+        document.getElementById('rightHealthDecrease').style.width = player2.health + '%';
+
+        console.log("player1 attacking")
+    }
+
+    // set attack back to false after certain attack frame
+    if(player1.isAttacking && player1.framesCurrent == player1.sprites[player1.attackMoves].hitFrame)
+    {
+        player1.isAttacking = false;
+        player1.attackMoves = 'none';
+    }
+
+    // detect for attack collision for player2
+    if(rectangleCollision({rectangle1: player2, rectangle2: player1}) 
+        && player2.isAttacking
+        && player2.attackMoves != 'none'
+        && player2.framesCurrent == player2.sprites[player2.attackMoves].hitFrame
+        )
+    {
+        player2.isAttacking = false;
+        player2.attackMoves = 'none';
+
+        player1.health -= 10;
+        document.getElementById('leftHealthDecrease').style.width = player1.health + '%';
+
+        console.log("player2 attacking")
+    }
+
+    // set attack back to false after certain attack frame
+    if(player2.isAttacking && player2.framesCurrent == player2.sprites[player2.attackMoves].hitFrame)
+    {
+
+        player2.isAttacking = false;
+        player2.attackMoves = 'none';
+    }
+
+}
+
+animation();
+
+// key down event
+$(document).keydown(function(event){
+    switch(event.key)
+    {
+        // player1 cases
+        case 'w':
+            PLAYER1_KEYS.w.pressed = true;
+            break;
+        case 'a':
+            PLAYER1_KEYS.a.pressed = true;
+            player1.lastKey = 'a';
+            break
+        case 'd':
+            PLAYER1_KEYS.d.pressed = true;
+            player1.lastKey = 'd';
+            break
+        case 'j':
+            player1.attack('attack1');
+            break
+        case 'k':
+            player1.attack('attack2');
+            break
+
+
+        // player2 cases
+        case 'ArrowUp':
+            PLAYER2_KEYS.w.pressed = true;
+            break;
+        case 'ArrowLeft':
+            PLAYER2_KEYS.a.pressed = true;
+            player2.lastKey = 'a';
+            break
+        case 'ArrowRight':
+            PLAYER2_KEYS.d.pressed = true;
+            player2.lastKey = 'd';
+            break
+        case '1':
+            player2.attack('attack1');
+            break
+        case '2':
+            player2.attack('attack2');
+            break
+
+
+    }
+    console.log(event.key, 'down');
+});
+
+// key up event
+$(document).keyup(function(event){
+    // player1 cases
+    switch(event.key)
+    {
+        case 'w':
+            PLAYER1_KEYS.w.pressed = false;
+            break;
+        case 'a':
+            PLAYER1_KEYS.a.pressed = false;
+            break
+        case 'd':
+            PLAYER1_KEYS.d.pressed = false;
+            break   
+
+        // player2 cases
+        case 'ArrowUp':
+            PLAYER2_KEYS.w.pressed = false;
+            break;
+        case 'ArrowLeft':
+            PLAYER2_KEYS.a.pressed = false;
+            break
+        case 'ArrowRight':
+            PLAYER2_KEYS.d.pressed = false;
+            break
+
+            
+    }
+    console.log(event.key, 'up');
+});
+
+
+
+
 
 
